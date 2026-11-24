@@ -1,0 +1,99 @@
+# Requisitos
+
+## Decisiones tomadas
+
+- El cliente final reserva sin crear cuenta.
+- El único dato de contacto obligatorio es el celular. El correo es opcional.
+- No se pide cédula al cliente.
+- Un usuario puede tener varios roles dentro de un negocio (por ejemplo, administrador y empleado a la vez).
+- La ficha del cliente es por negocio: el mismo celular en dos negocios son dos fichas distintas.
+- El historial de eventos es inmutable. Los datos personales de la ficha se pueden anonimizar a solicitud del titular, y el historial se conserva sin datos identificables.
+- No se aceptan archivos SVG como logo en el MVP.
+
+## Requisitos funcionales del MVP
+
+### Negocio y cuenta
+- RF-01: El dueño puede registrarse y crear un negocio con nombre y enlace propio único.
+- RF-02: El dueño puede iniciar y cerrar sesión.
+- RF-03: El dueño puede subir el logo de su negocio (PNG, JPG o WebP, con tamaño máximo definido).
+- RF-04: El sistema propone una paleta de colores a partir del logo y la aplica a la página pública del negocio, ajustándola para garantizar legibilidad.
+- RF-05: El dueño puede cambiar manualmente el color principal propuesto.
+
+### Catálogo y horarios
+- RF-06: El dueño puede crear, editar y desactivar servicios con nombre, duración y precio.
+- RF-07: El dueño puede crear, editar y desactivar empleados.
+- RF-08: El dueño puede asignar a cada empleado los servicios que presta.
+- RF-09: El dueño puede definir el horario semanal de atención de cada empleado.
+- RF-10: El dueño puede bloquear fechas u horas específicas (festivos, vacaciones, permisos).
+
+### Roles y permisos
+- RF-11: Un usuario puede tener varios roles dentro de un mismo negocio.
+- RF-12: Los permisos se determinan por los roles asignados, no por un tipo fijo de cuenta.
+
+### Reserva (cliente final)
+- RF-13: El cliente puede ver la página pública del negocio con sus servicios.
+- RF-14: El cliente puede elegir un servicio y ver los horarios disponibles, con o sin preferencia de empleado.
+- RF-15: El cliente puede reservar un horario dejando nombre completo y celular (correo opcional) y aceptando la política de tratamiento de datos.
+- RF-16: El cliente recibe un código de reserva en pantalla, y por correo si lo proporcionó.
+- RF-17: El cliente puede cancelar su reserva con el código y el celular con que reservó.
+
+### Agenda
+- RF-18: El empleado puede ver su propia agenda por día y por semana.
+- RF-19: El dueño puede ver la agenda de todos los empleados.
+- RF-20: El dueño puede cancelar una reserva.
+- RF-21: El dueño puede marcar una reserva como atendida o como inasistencia.
+
+### Reglas del sistema
+- RF-22: El sistema no permite dos reservas sobre el mismo horario del mismo empleado.
+- RF-23: El sistema solo ofrece horarios dentro del horario del empleado y que no estén bloqueados.
+- RF-24: Un negocio solo puede ver y modificar sus propios datos.
+
+### Historial
+- RF-25: Cada reserva, cancelación, atención e inasistencia queda registrada como un evento inmutable con fecha y autor.
+- RF-26: El dueño puede ver el historial de visitas de cada cliente de su negocio.
+
+## Requisitos no funcionales
+
+### Rendimiento
+- RNF-01: La página pública de un negocio carga en menos de 2 segundos en una conexión móvil 4G.
+- RNF-02: La consulta de horarios disponibles responde en menos de 1 segundo para el 95 % de las solicitudes.
+
+### Concurrencia e integridad
+- RNF-03: Dos intentos simultáneos de reservar el mismo horario nunca resultan en dos reservas confirmadas.
+- RNF-04: El sistema soporta 50 usuarios concurrentes sin degradar los tiempos de RNF-02.
+
+### Seguridad
+- RNF-05: Todo el tráfico va cifrado (HTTPS) y las contraseñas se guardan con un algoritmo de hash seguro (Argon2 o bcrypt).
+- RNF-06: Ningún negocio puede acceder a datos de otro, ni manipulando URLs o solicitudes. Se verifica con pruebas automatizadas.
+- RNF-07: La subida de logos valida el tipo real del archivo y el tamaño máximo.
+- RNF-08: Límites anti-abuso: 3 reservas por día y 5 activas por celular y negocio, horizonte máximo de reserva configurable (30 días por defecto) y límite de intentos por IP.
+
+### Privacidad (Ley 1581 de 2012)
+- RNF-09: Se recolectan solo los datos estrictamente necesarios, con autorización expresa registrada (fecha y versión de la política aceptada).
+- RNF-10: A solicitud del titular, el dueño puede anonimizar los datos personales de un cliente. El historial de eventos se conserva sin datos identificables.
+- RNF-11: Los eventos del historial no contienen texto libre ni datos personales: solo tipo, fecha, autor e identificador interno.
+
+### Disponibilidad y datos
+- RNF-12: Meta de disponibilidad del 99 % mensual, con copias de seguridad diarias de la base de datos y una restauración probada.
+- RNF-13: El historial de eventos solo admite inserciones: la aplicación no tiene permisos de modificar ni borrar sobre esa tabla.
+
+### Usabilidad
+- RNF-14: Diseño pensado primero para celular.
+- RNF-15: Reservar toma como máximo 5 pasos desde la página del negocio.
+- RNF-16: Contraste de colores conforme a WCAG AA (4.5:1 para texto normal).
+
+### Mantenibilidad y operación
+- RNF-17: Todo el sistema arranca en un entorno local con un solo comando (contenedores).
+- RNF-18: La configuración sensible vive en variables de entorno, nunca en el código.
+- RNF-19: Los eventos importantes se registran en logs estructurados.
+- RNF-20: Las fechas se guardan en UTC y se muestran en la zona horaria del negocio (America/Bogota por defecto).
+
+## Supuestos de escala
+
+Diseño pensado para unos 100 negocios y 5.000 reservas al mes. Es una referencia para decidir con criterio y evitar sobreingeniería, no una meta de construcción.
+
+## Previsto para versiones posteriores
+
+- Verificación del celular con código y notificaciones por WhatsApp.
+- Beneficios de fidelidad, con autorización opcional y separada del cliente.
+- Política automática de retención de datos.
