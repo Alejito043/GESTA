@@ -2,20 +2,48 @@
 
 ## Decisiones tomadas
 
+### Clientes y datos
 - El cliente final reserva sin crear cuenta.
-- El único dato de contacto obligatorio es el celular. El correo es opcional.
+- El único dato de contacto obligatorio es el celular (10 dígitos, empieza por 3). El correo es opcional.
 - No se pide cédula al cliente.
-- Un usuario puede tener varios roles dentro de un negocio (por ejemplo, administrador y empleado a la vez).
 - La ficha del cliente es por negocio: el mismo celular en dos negocios son dos fichas distintas.
 - El historial de eventos es inmutable. Los datos personales de la ficha se pueden anonimizar a solicitud del titular, y el historial se conserva sin datos identificables.
-- No se aceptan archivos SVG como logo en el MVP.
+- Los eventos del historial no contienen texto libre. Los motivos de cancelación del dueño son una lista fija: empleado no disponible, negocio cerrado, solicitud del cliente por teléfono y otro.
+- Los cambios de estado de una reserva atendida o marcada solo los corrige un administrador, agregando un evento de corrección.
+- No se puede anonimizar a un cliente con reservas activas.
+
+### Reservas
+- Los horarios se ofrecen en bloques de 15 minutos. Las duraciones de los servicios son múltiplos de 15.
+- Sin preferencia de empleado, la reserva se asigna al primer empleado disponible según un orden fijo.
+- El horario no se retiene mientras el cliente llena el formulario. El conflicto se resuelve al confirmar.
+- El cliente puede cancelar en cualquier momento antes de la cita, con el código y el celular.
+- Las reservas del mismo día requieren 30 minutos de anticipación.
+- El código de reserva tiene 6 caracteres, sin caracteres confundibles (0/O, 1/I).
+- Límites anti-abuso: 3 reservas por día y 5 activas por celular y negocio, horizonte máximo de 30 días, 10 intentos de reserva por hora por IP.
+
+### Cuentas, roles y acceso
+- Un usuario puede tener varios roles dentro de un negocio (por ejemplo, administrador y empleado a la vez).
+- El dueño inicia sesión con correo. Los empleados inician sesión con nombre de usuario.
+- El dueño da acceso a un empleado creándole un usuario con contraseña temporal. La contraseña temporal vence a las 72 horas y debe cambiarse en el primer ingreso.
+- La sesión expira tras 12 horas de inactividad.
+- Las contraseñas tienen mínimo 10 caracteres, sin reglas de composición, y se rechazan las muy comunes.
+
+### Logo y diseño
+- El logo admite PNG, JPG o WebP con un máximo de 5 MB. No se aceptan SVG.
+- Se genera una versión reducida del logo para la página pública y se conserva el original.
+- La paleta se propone automáticamente desde el logo, con ajuste para cumplir el contraste mínimo, y el dueño puede cambiar el color principal.
+
+### Bloqueos y desactivaciones
+- Desactivar un servicio o empleado con reservas futuras impide nuevas reservas y conserva las existentes.
+- Los bloqueos y cambios de horario no cancelan reservas existentes. El sistema muestra la lista de afectadas y el dueño decide.
+- Solo se puede marcar una reserva como atendida o inasistencia después de su hora de inicio.
 
 ## Requisitos funcionales del MVP
 
 ### Negocio y cuenta
 - RF-01: El dueño puede registrarse y crear un negocio con nombre y enlace propio único.
-- RF-02: El dueño puede iniciar y cerrar sesión.
-- RF-03: El dueño puede subir el logo de su negocio (PNG, JPG o WebP, con tamaño máximo definido).
+- RF-02: El dueño y los empleados pueden iniciar y cerrar sesión.
+- RF-03: El dueño puede subir el logo de su negocio (PNG, JPG o WebP, máximo 5 MB).
 - RF-04: El sistema propone una paleta de colores a partir del logo y la aplica a la página pública del negocio, ajustándola para garantizar legibilidad.
 - RF-05: El dueño puede cambiar manualmente el color principal propuesto.
 
@@ -26,9 +54,12 @@
 - RF-09: El dueño puede definir el horario semanal de atención de cada empleado.
 - RF-10: El dueño puede bloquear fechas u horas específicas (festivos, vacaciones, permisos).
 
-### Roles y permisos
+### Roles, permisos y acceso
 - RF-11: Un usuario puede tener varios roles dentro de un mismo negocio.
 - RF-12: Los permisos se determinan por los roles asignados, no por un tipo fijo de cuenta.
+- RF-27: El dueño puede dar acceso a un empleado creándole un usuario con contraseña temporal.
+- RF-28: El empleado debe cambiar la contraseña temporal en su primer ingreso.
+- RF-29: El dueño puede recuperar su contraseña mediante un enlace enviado a su correo.
 
 ### Reserva (cliente final)
 - RF-13: El cliente puede ver la página pública del negocio con sus servicios.
@@ -41,7 +72,7 @@
 - RF-18: El empleado puede ver su propia agenda por día y por semana.
 - RF-19: El dueño puede ver la agenda de todos los empleados.
 - RF-20: El dueño puede cancelar una reserva.
-- RF-21: El dueño puede marcar una reserva como atendida o como inasistencia.
+- RF-21: El dueño y los empleados pueden marcar una reserva como atendida o como inasistencia.
 
 ### Reglas del sistema
 - RF-22: El sistema no permite dos reservas sobre el mismo horario del mismo empleado.
@@ -49,7 +80,7 @@
 - RF-24: Un negocio solo puede ver y modificar sus propios datos.
 
 ### Historial
-- RF-25: Cada reserva, cancelación, atención e inasistencia queda registrada como un evento inmutable con fecha y autor.
+- RF-25: Cada reserva, cancelación, atención, inasistencia, corrección y anonimización queda registrada como un evento inmutable con fecha y autor.
 - RF-26: El dueño puede ver el historial de visitas de cada cliente de su negocio.
 
 ## Requisitos no funcionales
@@ -63,7 +94,7 @@
 - RNF-04: El sistema soporta 50 usuarios concurrentes sin degradar los tiempos de RNF-02.
 
 ### Seguridad
-- RNF-05: Todo el tráfico va cifrado (HTTPS) y las contraseñas se guardan con un algoritmo de hash seguro (Argon2 o bcrypt).
+- RNF-05: Todo el tráfico va cifrado (HTTPS). Las contraseñas se guardan con un algoritmo de hash seguro (Argon2 o bcrypt), tienen mínimo 10 caracteres y se rechazan las contraseñas muy comunes.
 - RNF-06: Ningún negocio puede acceder a datos de otro, ni manipulando URLs o solicitudes. Se verifica con pruebas automatizadas.
 - RNF-07: La subida de logos valida el tipo real del archivo y el tamaño máximo.
 - RNF-08: Límites anti-abuso: 3 reservas por día y 5 activas por celular y negocio, horizonte máximo de reserva configurable (30 días por defecto) y límite de intentos por IP.
@@ -97,3 +128,7 @@ Diseño pensado para unos 100 negocios y 5.000 reservas al mes. Es una referenci
 - Verificación del celular con código y notificaciones por WhatsApp.
 - Beneficios de fidelidad, con autorización opcional y separada del cliente.
 - Política automática de retención de datos.
+- Crear reservas desde el panel en nombre de un cliente (reserva telefónica).
+- Anticipación mínima, horizonte de reserva y política de cancelación configurables por negocio.
+- Retención temporal del horario mientras el cliente completa la reserva.
+- Reparto equitativo de la carga entre empleados en la asignación automática.
