@@ -6,7 +6,8 @@
 - El cliente final reserva sin crear cuenta.
 - El único dato de contacto obligatorio es el celular (10 dígitos, empieza por 3). El correo es opcional.
 - No se pide cédula al cliente.
-- La ficha del cliente es por negocio: el mismo celular en dos negocios son dos fichas distintas.
+- La ficha del cliente es por negocio y se identifica por celular y nombre normalizado (sin tildes, en minúsculas y sin espacios repetidos). El mismo celular con nombres distintos son fichas distintas, y el mismo celular en dos negocios también.
+- Los límites anti-abuso se cuentan por celular, no por ficha.
 - El historial de eventos es inmutable. Los datos personales de la ficha se pueden anonimizar a solicitud del titular, y el historial se conserva sin datos identificables.
 - Los eventos del historial no contienen texto libre. Los motivos de cancelación del dueño son una lista fija: empleado no disponible, negocio cerrado, solicitud del cliente por teléfono y otro.
 - Los cambios de estado de una reserva atendida o marcada solo los corrige un administrador, agregando un evento de corrección.
